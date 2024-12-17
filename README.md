@@ -1,1 +1,1 @@
-# kos_project
+# Suheung kiosk
