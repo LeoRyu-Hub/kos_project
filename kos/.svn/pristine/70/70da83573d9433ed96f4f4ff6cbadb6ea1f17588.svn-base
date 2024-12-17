@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kos.main.dao.mainDao">
+
+	<resultMap type="com.kos.vo.main.mainInfoVO" id="menuMap">
+		<result column="MENU_CODE"			 	property="menuCode" />
+		<result column="MENU_NAME" 				property="menuName" />
+		<result column="CATEGORY_CODE" 			property="categoryCode" />
+		<result column="MENU_PRICE" 			property="menuPrice" />
+		<result column="MENU_DETAIL" 			property="menuDetail" />
+		<result column="MENU_ST" 				property="menuSt" />
+		<result column="REG_DT" 				property="regDt" />
+		<result column="REG_ID" 				property="regId" />
+		<result column="CATEGORY_NAME" 			property="categoryName" />
+		<result column="MENU_IMAGE" 			property="menuUrl" />
+		<result column="RN" 					property="rn" />
+		<result column="MEMBER_PHONE" 			property="memberPhone" />
+		<result column="POINT" 					property="point" />
+	</resultMap>
+
+	<select id="selectMenuList" resultMap="menuMap">
+		SELECT *
+		FROM (SELECT
+		A.MENU_CODE,
+		A.MENU_NAME,
+		A.MENU_IMAGE,
+		A.MENU_PRICE,
+		A.CATEGORY_CODE,
+		A.MENU_DETAIL,
+		A.MENU_ST,
+		B.CATEGORY_NAME,
+		ROWNUM RN
+		FROM TBL_MENU_INFO A, TBL_CATEGORY_INFO B
+		WHERE
+		A.CATEGORY_CODE=B.CATEGORY_CODE
+		<if test="categoryCode!=null and categoryCode!='' ">
+			AND A.CATEGORY_CODE=#{categoryCode}
+		</if>
+		)
+		WHERE RN<![CDATA[>]]>(#{currentPage}-1)*#{countPerPage}
+		AND RN<![CDATA[<=]]>#{currentPage}*#{countPerPage}
+	</select>
+
+	<select id="selectTotalMenuPageCnt" resultType="integer">
+		SELECT COUNT(*)
+		FROM TBL_MENU_INFO A
+		WHERE 1=1
+		<if test="categoryCode!=null and categoryCode!='' ">
+			AND A.CATEGORY_CODE=#{categoryCode}
+		</if>
+	</select>
+
+	<select id="selectMenuInfo" resultMap="menuMap">
+		SELECT 
+		A.MENU_CODE,
+		A.MENU_NAME,
+		A.MENU_IMAGE,
+		A.MENU_PRICE,
+		A.MENU_DETAIL,
+		A.MENU_ST
+		FROM TBL_MENU_INFO A
+		WHERE A.MENU_CODE = #{menuCode}
+	</select> 
+	
+	<select id="selectMemberInfo" resultMap="menuMap">
+		SELECT 
+		A.POINT,
+		A.MEMBER_PHONE
+		FROM TBL_MEMBER_INFO A
+		WHERE replace(A.MEMBER_PHONE,'-','') = #{memberPhone}
+	</select>
+	
+	<insert id="insertMember">
+	INSERT INTO TBL_MEMBER_INFO(
+		MEMBER_PHONE, JOIN_DT, QUIT_YN, POINT
+		)values(
+		SUBSTR(#{memberPhone},1,3)||'-'||SUBSTR(#{memberPhone},4,4)||'-'||SUBSTR(#{memberPhone},8,4), SYSDATE, 'N', #{point}
+		)
+	</insert>
+	
+	<insert id="insertPoint">
+	INSERT INTO TBL_POINT(
+		MEMBER_PHONE, USE_SQ, POINT_USEAGE, POINT_BALANCE, USE_DT
+		)values(
+		SUBSTR(#{memberPhone},1,3)||'-'||SUBSTR(#{memberPhone},4,4)||'-'||SUBSTR(#{memberPhone},8,4),'1',#{point}, #{point}, SYSDATE
+		)
+	</insert>
+	
+	<update id="useMemberPoint">  <!--  멤버테이블 포인트 사용-->
+	UPDATE TBL_MEMBER_INFO SET
+	POINT=POINT-#{point}
+	WHERE MEMBER_PHONE=#{memberPhone}
+	</update>
+	
+	<insert id="usePoint">  <!--  포인트 이력 테이블 사용-->
+	INSERT INTO TBL_POINT (
+	    MEMBER_PHONE, USE_SQ, POINT_USEAGE, POINT_BALANCE, USE_DT
+	) 
+	VALUES (
+	   #{memberPhone},
+	    (SELECT MAX(TO_NUMBER(USE_SQ)) + 1 FROM TBL_POINT WHERE MEMBER_PHONE=#{memberPhone}),
+	    -#{point},
+	    (SELECT POINT_BALANCE
+		FROM TBL_POINT
+		WHERE MEMBER_PHONE = #{memberPhone}
+  			AND USE_SQ = (SELECT MAX(USE_SQ)
+        		        FROM TBL_POINT
+              			WHERE MEMBER_PHONE = #{memberPhone}))-#{point},
+	    SYSDATE
+	)
+	</insert>
+	
+	<update id="earnMemberPoint">  <!--  멤버테이블 포인트 적립-->
+	UPDATE TBL_MEMBER_INFO SET
+	POINT=POINT+#{point}
+	WHERE MEMBER_PHONE=SUBSTR(#{memberPhone},1,3)||'-'||SUBSTR(#{memberPhone},4,4)||'-'||SUBSTR(#{memberPhone},8,4)
+	</update>
+	
+	<insert id="earnPoint">  <!--  포인트 이력 테이블 적립-->
+	INSERT INTO TBL_POINT (
+	    MEMBER_PHONE, USE_SQ, POINT_USEAGE, POINT_BALANCE, USE_DT
+	) 
+	VALUES (
+	   SUBSTR(#{memberPhone},1,3)||'-'||SUBSTR(#{memberPhone},4,4)||'-'||SUBSTR(#{memberPhone},8,4),
+	    (SELECT MAX(TO_NUMBER(USE_SQ)) + 1 FROM TBL_POINT WHERE MEMBER_PHONE=SUBSTR(#{memberPhone},1,3)||'-'||SUBSTR(#{memberPhone},4,4)||'-'||SUBSTR(#{memberPhone},8,4)),
+	    #{point},
+	    (SELECT POINT_BALANCE
+		FROM TBL_POINT
+		WHERE MEMBER_PHONE = SUBSTR(#{memberPhone},1,3)||'-'||SUBSTR(#{memberPhone},4,4)||'-'||SUBSTR(#{memberPhone},8,4)
+  			AND USE_SQ = (SELECT MAX(USE_SQ)
+        		        FROM TBL_POINT
+              			WHERE MEMBER_PHONE = SUBSTR(#{memberPhone},1,3)||'-'||SUBSTR(#{memberPhone},4,4)||'-'||SUBSTR(#{memberPhone},8,4))) + #{point},
+	    SYSDATE
+	)
+	</insert>
+	
+	<select id="createNewOrderNo" resultType="String">
+	SELECT NVL2(MAX(ORDER_NO), MAX(ORDER_NO)+1, TO_CHAR(SYSDATE,'YYMMDD')||'001') 
+	FROM TBL_ORDER_INFO
+	WHERE SUBSTR(ORDER_NO,0,6)=TO_CHAR(SYSDATE,'YYMMDD')
+	</select>
+	
+	<insert id="insertOrder">
+	INSERT INTO TBL_ORDER_INFO(
+	    ORDER_NO, EARN_YN, MEMBER_PHONE, EARN_PRICE, DISCOUNT_YN, DISCOUNT_PRICE, ORDER_PRICE, PAY_PRICE, ORDER_DT, PAYMENTMETHOD_CODE, REQUEST
+	    )VALUES(
+	    #{orderNo},
+	    #{earnYN},
+	    #{memberPhone},
+	    #{earnPrice},
+	    #{discountYN},
+	    #{discountPrice},
+	    #{orderPrice},
+	    #{payPrice},
+	    SYSDATE,
+	    #{paymentmethodCode},
+	    #{request}
+	    )	
+	</insert>
+	
+	<insert id="insertOrderMenu">
+	INSERT INTO TBL_ORDERMENU(
+    	ORDER_NO, ORDER_SQ, MENU_CODE, ORDER_QTY
+    )VALUES(
+        #{orderNo}, 
+        (SELECT NVL2(MAX(ORDER_SQ), MAX(ORDER_SQ)+1, 1) 
+		FROM TBL_ORDERMENU
+		WHERE ORDER_NO=#{orderNo}),
+		#{menuCode},
+		#{qty})
+	</insert>
+	
+
+
+</mapper>
