@@ -13,7 +13,7 @@
 - Spring Boot
 - HTML5, CSS3
 - Oracle
-- Pyton(음성인식)
+- Python(음성인식)
 
 
 # 📌 기능
