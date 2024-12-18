@@ -3,10 +3,7 @@
 
 
 # 🔎 PREVIEW
-
-<img src="https://github.com/user-attachments/assets/966ff688-a3fa-4310-8828-9474d5d71ff2" width="400" height="300">
-
-
+<img src="https://github.com/user-attachments/assets/8fe9c3e3-fbf9-41ad-97ab-7e709030b1fc">
 
 # 🛠 사용 기술
 - Java, Java Script
