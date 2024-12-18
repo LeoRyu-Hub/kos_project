@@ -3,7 +3,10 @@
 
 
 # 🔎 PREVIEW
-![키오스크 주문](https://github.com/user-attachments/assets/f1b0e130-3832-4fe4-abb7-13fda9bc7d05)
+<p align='center'>
+    <img src ="https://github.com/user-attachments/assets/e9bb6506-beaf-4cbb-9a1b-37325ad1f5a5">
+</p>
+
 
 
 # 🛠 사용 기술
