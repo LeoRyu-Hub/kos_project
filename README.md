@@ -4,7 +4,7 @@
 
 # 🔎 PREVIEW
 
-
+<img src="https://github.com/user-attachments/assets/966ff688-a3fa-4310-8828-9474d5d71ff2" width="400" height="300">
 
 
 
