@@ -3,7 +3,8 @@
 
 
 # 🔎 PREVIEW
-<img src="https://github.com/user-attachments/assets/8fe9c3e3-fbf9-41ad-97ab-7e709030b1fc">
+![키오스크 주문](https://github.com/user-attachments/assets/f1b0e130-3832-4fe4-abb7-13fda9bc7d05)
+
 
 # 🛠 사용 기술
 - Java, Java Script
